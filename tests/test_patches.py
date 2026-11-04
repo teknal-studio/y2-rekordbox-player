@@ -15,7 +15,7 @@ SRC = os.path.join(ROOT, 'sources', 'v2.5', 'Y2-Rockbox-V2.5-Source',
                    '11_rockbox_android', 'rockbox-y1')
 PATCHES = os.path.join(ROOT, 'build', 'patches')
 ALL = ['y2dj-playlists-aiff.patch', 'y2dj-title-display.patch', 'y2dj-launch-guard.patch',
-       'y2dj-volume-keys.patch']
+       'y2dj-volume-keys.patch', 'y2dj-storage-guard.patch']
 
 
 @unittest.skipUnless(os.path.isdir(SRC), 'needs the V2.5 source in sources/v2.5')
@@ -54,6 +54,10 @@ class PatchesTest(unittest.TestCase):
             # Track display defaults to "title from tags" (choice 3).
             self.assertIn('playlist_viewer_track_display, LANG_TRACK_DISPLAY, 3,',
                           read('apps/settings_list.c'))
+            # Rockbox only starts with its home on internal storage mounted.
+            service = read('android/src/org/rockbox/RockboxService.java')
+            self.assertLess(service.index('if (!rockbox_running && !rockboxHomeReady())'),
+                            service.index('            startService();'))
             # Volume keys go through the event queue, after the long-press
             # skip path so that setting, when on, still sees them first.
             native = read('firmware/target/hosted/android/button-android.c')

@@ -1,0 +1,39 @@
+diff --color -ru a/android/src/org/rockbox/RockboxService.java b/android/src/org/rockbox/RockboxService.java
+--- a/android/src/org/rockbox/RockboxService.java	2026-11-03 22:53:11
++++ b/android/src/org/rockbox/RockboxService.java	2026-11-03 22:53:12
+@@ -171,6 +171,20 @@
+         if (intent.hasExtra("callback"))
+             mResultReceiver = (ResultReceiver) intent.getParcelableExtra("callback");
+ 
++        /* y2-rekordbox-player: never start Rockbox while its home on internal
++         * storage is unavailable, i.e. shared over USB or still remounting.
++         * Android restarts this START_STICKY service by itself, also during a
++         * USB storage session. A start then reads no config.cfg, runs on
++         * default settings, and can save them over the real ones. The
++         * activity's storage gate starts Rockbox once storage is back. */
++        if (!rockbox_running && !rockboxHomeReady())
++        {
++            Y2Marker.write(this, "RockboxService:deny start, internal storage not ready"
++                    + " state=" + Environment.getExternalStorageState());
++            stopSelf();
++            return;
++        }
++
+         if (!rockbox_running)
+             startService();
+ 
+@@ -193,6 +207,14 @@
+         Y2Marker.write(this, "RockboxService:RESULT_SERVICE_RUNNING sent");
+ 
+         rockbox_running = true;
++    }
++
++    /* Rockbox keeps its settings and resources in /storage/sdcard0/.rockbox. */
++    static boolean rockboxHomeReady()
++    {
++        File home = new File("/storage/sdcard0");
++        return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
++                && home.isDirectory() && home.canWrite();
+     }
+ 
+     public void onStart(Intent intent, int startId) {

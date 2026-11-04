@@ -36,6 +36,7 @@ Results from one Innioasis Y2 (stock firmware FM_3.2.4, MT6582, Android 4.4.2) w
 | `y2dj-launch-guard.patch` | After turning USB storage off, Rockbox sometimes stuck on "Restoring storage..." because a stale preference denied its own restart | Allow Rockbox's own restart when both saved routes are blank and the boot route property says Rockbox |
 | `y2dj-title-display.patch` | Playlist track lists showed file names | Default Track Display to "Title from ID3 tags" (falls back to the file name) |
 | `y2dj-volume-keys.patch` | The volume buttons did nothing. The keypad reports each press as a 40–75 ms down/up pair (seen in `y2_p12_volume_hold_v5.log`), and the polled button path can miss it | Post volume presses through the button queue, like the wheel, and log `RockboxVolume:` markers for each volume key |
+| `y2dj-storage-guard.patch` | After unplugging from a CDJ-3000, Rockbox came up with default settings (yellow menus, small font). Android restarted the `START_STICKY` Rockbox service while internal storage was still shared over USB; it found no `config.cfg` and began saving defaults (`config.cfg.new`). `y2dj-launch-guard.patch` let that restart through, because the restarted process reads blank route preferences | `RockboxService.doStart` refuses to start Rockbox, and stops the service, unless `/storage/sdcard0` is mounted and writable. The activity's storage gate starts it once storage is back |
 
 Titles come from file tags, not from rekordbox, so titles edited only in rekordbox will differ.
 

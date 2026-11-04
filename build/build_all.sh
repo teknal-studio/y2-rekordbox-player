@@ -44,7 +44,7 @@ run() {
 echo "== native libraries"
 run "bash /bld/build.sh patched /bld/patches/y2dj-playlists-aiff.patch /bld/patches/y2dj-title-display.patch /bld/patches/y2dj-volume-keys.patch"
 echo "== java"
-run "bash /bld/build_java.sh java /bld/patches/y2dj-launch-guard.patch /bld/patches/y2dj-volume-keys.patch"
+run "bash /bld/build_java.sh java /bld/patches/y2dj-launch-guard.patch /bld/patches/y2dj-volume-keys.patch /bld/patches/y2dj-storage-guard.patch"
 rm -f build/out/patched/bootanimation.zip build/out/patched/logo.bin
 if [ -n "${SPLASH_LOGO:-}" ]; then
     echo "== boot splash from $SPLASH_LOGO"

@@ -68,7 +68,8 @@ class PatchWiringTest(unittest.TestCase):
         lists = patch_lists()
         self.assertEqual(lists['native'], ['y2dj-playlists-aiff.patch', 'y2dj-title-display.patch',
                                            'y2dj-volume-keys.patch'])
-        self.assertEqual(lists['java'], ['y2dj-launch-guard.patch', 'y2dj-volume-keys.patch'])
+        self.assertEqual(lists['java'], ['y2dj-launch-guard.patch', 'y2dj-volume-keys.patch',
+                                         'y2dj-storage-guard.patch'])
 
 
 class ResourceVersionTest(unittest.TestCase):
