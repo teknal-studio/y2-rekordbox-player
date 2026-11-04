@@ -1,26 +1,31 @@
 # y2-rekordbox-player
 
-Use your Innioasis Y2 MP3 Media Player as both a personal listening device for your Rekordbox compatible library. Then plug your device into a CDJ like a baller when you show up and DJ from a knockoff iPod. How rad would that be? 
+**Your rekordbox crate, in your pocket.**
 
-Study your tracks and get intentionally intimate with a dedicated device specifically for listening to your DJ Crate on your way to a gig
+Turn an Innioasis Y2 MP3 player into a personal listening device for your rekordbox library. Study your tracks on the way to the gig, then plug the same device into a CDJ when you get there and DJ from a knockoff iPod like a baller. How rad is that?
 
-This is a little passion project inspired by watching Dammit Jeff on YouTube. 
+This is a little passion project, inspired by watching Dammit Jeff on YouTube.
 
-## Yes, it's funny to DJ from a knockoff iPod, but why?
-With the advent of hyper convenient streaming services and online music store like Beatport, we've unfortunately lost something special with our relationship to music. Sometimes doing things the hard way with more friction is better. Much of the music that I play in my DJ sets has a personal relationship to me. 
+> [!WARNING]
+> **Disclaimer:** this is a prototype. It has been tested on one Y2 so far, so expect rough edges. Flashing replaces your Y2's firmware and erases its internal storage.
+>
+> This project is not affiliated with rekordbox, AlphaTheta, Pioneer DJ or Innioasis. Pull requests are welcome.
 
-We don't hear stories of "I found this track at Media Play" or "I found this album at a record store." We're algorithmically fed music on Spotify, Apple Music, Tidal, etc. and while I can appreciate the convenience of these services, "I found this track on Spotify" isn't really a compelling or heartwarming story about how I found a track.
+## Yes, it's funny to DJ from a knockoff iPod. But why?
 
-This is how I'm fighting back against the loss of ownership in media. I'm a DJ. I hunt, dig, and curate music so I can deliver to whoever shows up to my sets the best night of their life. It's my job to do that as both a DJ and musician. I still want to share the journey of these tracks and why I love them so much, and who better to share that with that those who come to my shows?
+Hyper-convenient streaming services and online stores like Beatport have cost us something special in our relationship with music. Sometimes doing things the hard way, with more friction, is better.
 
-Own your media. Reject "you will own nothing and be happy."
+Much of the music I play in my sets has a personal story behind it. We don't hear "I found this track at Media Play" or "I found this album at a record store" anymore. We're fed music by algorithms on Spotify, Apple Music and Tidal. I appreciate the convenience, but "I found this track on Spotify" isn't a compelling or heartwarming story.
 
-The music you put on this device is YOURS. And if you're DJing, you can share your journey and story through the power of curated sound and intentional listening.
+This is how I'm fighting back against the loss of ownership in media. I'm a DJ. I hunt, dig and curate music so that whoever shows up to my sets has the best night of their life. That's my job as a DJ and a musician. I still want to share the journey of these tracks and why I love them, and who better to share it with than the people who come to my shows?
+
+**Own your media. Reject "you will own nothing and be happy."**
+
+The music you put on this device is *yours*. And if you DJ, you can share your journey and your story through curated sound and intentional listening.
 
 ## What is this?
-This code turns your Innioasis Y2 pocket player into a mini rekordbox: browse your rekordbox playlists on the Y2, and plug the same microSD into a CDJ, or plug the device directly into a CDJ.
 
-DISCLAIMER: This is a prototype. I've tested it on one Y2 so far; expect rough edges. Pull requests are welcome. This project is not affiliated with Rekordbox, AlphaTheta, or Pioneer DJ.
+This code turns your Innioasis Y2 into a mini rekordbox. Browse your rekordbox playlists on the Y2, then put the same microSD into a CDJ, or plug the Y2 straight into one.
 
 ## What works
 
@@ -30,7 +35,7 @@ DISCLAIMER: This is a prototype. I've tested it on one Y2 so far; expect rough e
 - The Y2 in USB storage mode on a CDJ-3000, an OPUS-QUAD and over Pro DJ Link
 - The microSD shows up as the first USB drive
 
-Not working yet: one XDJ-RX3 did not read it (untested since the drive order change), and playlists must be regenerated on a computer after each rekordbox export.
+**Not working yet:** one XDJ-RX3 did not read it (untested since the drive order change), and playlists must be regenerated on a computer after each rekordbox export.
 
 ## How it fits together
 
