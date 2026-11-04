@@ -5,6 +5,8 @@
 #   sources/rom_y2.zip                   the V2.5 ROM
 #   sources/Y2-Rockbox-V2.5-Source.zip   its GPL source
 # Output: build/out/rom/rom_y2.zip, flashable with the Innioasis Updater.
+# Optional: SPLASH_LOGO=path/to/logo.png replaces the boot animation with that
+# logo spinning on a record (needs Pillow on the host). Unset keeps the stock one.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -35,6 +37,12 @@ echo "== native libraries"
 run "bash /bld/build.sh patched /bld/patches/y2dj-playlists-aiff.patch /bld/patches/y2dj-title-display.patch"
 echo "== java"
 run "bash /bld/build_java.sh java /bld/patches/y2dj-launch-guard.patch"
+rm -f build/out/patched/bootanimation.zip
+if [ -n "${SPLASH_LOGO:-}" ]; then
+    echo "== boot animation from $SPLASH_LOGO"
+    python3 -I tools/make_bootanimation.py "$SPLASH_LOGO" build/out/splash --style record --pad-to 658280
+    cp build/out/splash/bootanimation.zip build/out/patched/bootanimation.zip
+fi
 echo "== app, vold and ROM"
 run '
 set -e

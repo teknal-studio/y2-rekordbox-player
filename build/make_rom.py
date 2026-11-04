@@ -6,6 +6,7 @@ label and the rest of the filesystem unchanged. Runs inside the build image.
 usage: make_rom.py rom_y2.zip patched_dir out.zip   (patched_dir has FILES values)
 """
 import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -15,6 +16,9 @@ import zipfile
 rom, patched, out = sys.argv[1:4]
 FILES = {"/lib/librockbox.so": "librockbox.so", "/lib/libaiff.so": "libaiff.so",
          "/app/Rockbox.apk": "Rockbox.apk", "/bin/vold": "vold"}
+# Optional: a custom boot animation (tools/make_bootanimation.py --pad-to 658280).
+if os.path.exists(f"{patched}/bootanimation.zip"):
+    FILES["/media/bootanimation.zip"] = "bootanimation.zip"
 BLOCK = 4096
 
 
