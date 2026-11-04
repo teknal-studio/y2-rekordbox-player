@@ -27,23 +27,30 @@ SITES = [
 ORIG_SHA256 = "7e07a24814f42a7b2d38b05481eb372202a5257e62637cfbd0d42e90f0fccc0f"
 
 
-def main():
-    src, dst = sys.argv[1:3]
-    data = bytearray(open(src, "rb").read())
-    assert hashlib.sha256(data).hexdigest() == ORIG_SHA256, "unexpected vold"
+def patch(orig, sites=SITES):
+    """Return orig with the LUN literals swapped."""
+    data = bytearray(orig)
     assert data.count(LUN0) == 1 and data.count(LUN1) == 1
     addr = {LUN0: data.find(LUN0), LUN1: data.find(LUN1)}
     other = {LUN0: LUN1, LUN1: LUN0}
 
-    for lit, add, path in SITES:
+    for lit, add, path in sites:
         assert struct.unpack_from("<H", data, add)[0] == ADD_R0_PC, hex(add)
         pc = add + 4
         assert pc + struct.unpack_from("<I", data, lit)[0] == addr[path], hex(lit)
         struct.pack_into("<I", data, lit, addr[other[path]] - pc)
 
-    for lit, add, path in SITES:
+    for lit, add, path in sites:
         pc = add + 4
         assert pc + struct.unpack_from("<I", data, lit)[0] == addr[other[path]]
+    return bytes(data)
+
+
+def main():
+    src, dst = sys.argv[1:3]
+    orig = open(src, "rb").read()
+    assert hashlib.sha256(orig).hexdigest() == ORIG_SHA256, "unexpected vold"
+    data = patch(orig)
 
     with open(dst, "wb") as f:
         f.write(data)

@@ -10,8 +10,11 @@ import os
 import sys
 
 
-def main():
-    local, card = sys.argv[1:3]
+CARD_ROOT = "/storage/sdcard1"  # where the card is mounted on the Y2
+
+
+def main(argv=None):
+    local, card = (argv or sys.argv[1:])[:2]
     target = os.path.join(card, "Playlists")
     removed = stuck = 0
     for d, _, fs in os.walk(target):
@@ -44,9 +47,11 @@ def main():
             with open(os.path.join(dst, f), encoding="utf-8") as h:
                 for line in h:
                     line = line.rstrip("\n")
-                    if line.startswith("/") and not os.path.exists(card + line[len("/storage/sdcard1"):]):
+                    if line.startswith("/") and not os.path.exists(card + line[len(CARD_ROOT):]):
                         missing += 1
     print(f"playlists {files}, wrong times {wrong}, missing tracks {missing}")
+    return {"removed": removed, "stuck": stuck, "playlists": files,
+            "wrong_times": wrong, "missing_tracks": missing}
 
 
 if __name__ == "__main__":

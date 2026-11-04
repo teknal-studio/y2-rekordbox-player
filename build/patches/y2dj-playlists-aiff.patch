@@ -1,6 +1,6 @@
 diff --color -ru a/apps/filetree.c b/apps/filetree.c
---- a/apps/filetree.c	2026-10-31 12:20:57
-+++ b/apps/filetree.c	2026-10-31 12:20:58
+--- a/apps/filetree.c	2026-11-03 20:08:34
++++ b/apps/filetree.c	2026-11-03 20:08:34
 @@ -372,6 +372,7 @@
  #define CHK_FT(show,attr) (*c->dirfilter == (show) && file_attr != (attr))
          /* filter out non-visible files */
@@ -27,27 +27,138 @@ diff --color -ru a/apps/filetree.c b/apps/filetree.c
  
      /* playlist catalog uses sorting independent from file browser */
      cmp_data.sort_file = (*c->dirfilter == SHOW_M3U) ?
+diff --color -ru a/apps/playlist_catalog.c b/apps/playlist_catalog.c
+--- a/apps/playlist_catalog.c	2026-11-03 20:52:46
++++ b/apps/playlist_catalog.c	2026-11-03 20:53:33
+@@ -145,6 +145,33 @@
+     }
+ }
+ 
++/* Where the catalog browser opens: the most recent playlist's path relative
++ * to the catalog dir root ("Folder/List.m3u8"), or "" if it isn't in there.
++ * With top_only, just its first part, so the browser opens at the top level
++ * with the folder that holds it selected. */
++static void catalog_reopen_path(char *buf, size_t bufsz, const char *root,
++                                bool top_only)
++{
++    const char *p = most_recent_playlist;
++    size_t len = strlen(root);
++
++    buf[0] = '\0';
++    while (len > 0 && root[len - 1] == PATH_SEPCH)
++        len--;
++    if (len == 0 || strncmp(p, root, len) || p[len] != PATH_SEPCH)
++        return;
++    p += len;
++    while (*p == PATH_SEPCH)
++        p++;
++    strmemccpy(buf, p, bufsz);
++    if (top_only)
++    {
++        char *sep = strchr(buf, PATH_SEPCH);
++        if (sep)
++            *sep = '\0';
++    }
++}
++
+ /* Display all playlists in catalog.  Selected "playlist" is returned.
+  * If status is CATBROWSE_CATVIEW then we're not adding anything into playlist */
+ static int display_playlists(char* playlist, enum catbrowse_status_flags status)
+@@ -154,6 +181,9 @@
+     int result = -1;
+     char selected_playlist[MAX_PATH];
+     selected_playlist[0] = '\0';
++    char reopen_at[MAX_PATH];
++    /* coming back from a playlist: reopen its folder, not the top level */
++    bool back_to_folder = false;
+ 
+     browser_status |= status;
+     bool view = (status == CATBROWSE_CATVIEW);
+@@ -164,7 +194,7 @@
+         .title = str(LANG_PLAYLISTS),
+         .icon = Icon_Playlist,
+         .root = selected_playlist,
+-        .selected = &most_recent_playlist[playlist_dir_length + 1],
++        .selected = reopen_at,
+         .buf = selected_playlist,
+         .bufsize = sizeof(selected_playlist),
+     };
+@@ -172,6 +202,8 @@
+ restart:
+     /* set / restore the root directory for the browser */
+     catalog_get_directory(selected_playlist, sizeof(selected_playlist));
++    catalog_reopen_path(reopen_at, sizeof(reopen_at), selected_playlist,
++                        !back_to_folder);
+     browse.flags &= ~BROWSE_SELECTED;
+ 
+     if (view && reopen_last_playlist)
+@@ -186,6 +218,7 @@
+             case PLAYLIST_VIEWER_CANCEL:
+             {
+                 reopen_last_playlist = false;
++                back_to_folder = true;
+                 goto restart;
+             }
+             case PLAYLIST_VIEWER_USB:
+@@ -205,6 +238,7 @@
+ 
+     if (browse.flags & BROWSE_SELECTED) /* User picked a playlist */
+     {
++        back_to_folder = true;
+         if (strcmp(most_recent_playlist, selected_playlist)) /* isn't most recent one */
+         {
+             path_append(most_recent_playlist, selected_playlist,
 diff --color -ru a/apps/tree.c b/apps/tree.c
---- a/apps/tree.c	2026-10-31 12:20:58
-+++ b/apps/tree.c	2026-10-31 12:20:58
-@@ -1138,8 +1138,13 @@
+--- a/apps/tree.c	2026-11-03 20:08:34
++++ b/apps/tree.c	2026-11-03 20:53:01
+@@ -1137,9 +1137,41 @@
+ 
              if (browse->selected)
              {
-                 set_current_file_ex(browse->root, browse->selected);
+-                set_current_file_ex(browse->root, browse->selected);
 -                /* set_current_file changes dirlevel, change it back */
-+                /* set_current_file changes dirlevel, make it relative to root */
-                 tc.dirlevel = 0;
-+                for (const char *p = browse->selected; *p != '\0'; p++)
+-                tc.dirlevel = 0;
++                /* selected is relative to root and may be in a subfolder
++                   ("Folder/List.m3u8"): open that subfolder with the file
++                   selected, and count dirlevel from root so Back goes up one
++                   folder at a time and stops at root. If the subfolder is
++                   gone, open root as before. */
++                const char *sel = browse->selected;
++                const char *leaf;
++                char path[MAX_PATH];
++                int levels = 0;
++                size_t rootlen = strlen(browse->root);
++
++                while (rootlen > 0 && browse->root[rootlen - 1] == PATH_SEPCH)
++                    rootlen--;
++                while (*sel == PATH_SEPCH)
++                    sel++;
++                leaf = strrchr(sel, PATH_SEPCH);
++
++                if (leaf && leaf[1] != '\0' &&
++                    snprintf(path, sizeof(path), "%.*s/%.*s", (int)rootlen,
++                             browse->root, (int)(leaf - sel), sel)
++                        < (int)sizeof(path) &&
++                    dir_exists(path))
 +                {
-+                    if (*p == PATH_SEPCH)
-+                        tc.dirlevel++;
++                    for (const char *p = sel; p <= leaf; p++)
++                    {
++                        if (*p == PATH_SEPCH)
++                            levels++;
++                    }
++                    strlcat(path, leaf, sizeof(path));
++                    set_current_file_ex(path, NULL);
 +                }
++                else
++                    set_current_file_ex(browse->root, sel);
++                /* set_current_file changes dirlevel, set it relative to root */
++                tc.dirlevel = levels;
              }
  
              ret_val = dirbrowse();
 diff --color -ru a/lib/rbcodec/codecs/aiff.c b/lib/rbcodec/codecs/aiff.c
---- a/lib/rbcodec/codecs/aiff.c	2026-10-31 12:20:57
-+++ b/lib/rbcodec/codecs/aiff.c	2026-10-31 12:21:09
+--- a/lib/rbcodec/codecs/aiff.c	2026-11-03 20:08:34
++++ b/lib/rbcodec/codecs/aiff.c	2026-11-03 20:08:34
 @@ -28,6 +28,9 @@
  #define FOURCC(c1, c2, c3, c4) \
  ((((uint32_t)c1)<<24)|(((uint32_t)c2)<<16)|(((uint32_t)c3)<<8)|((uint32_t)c4))

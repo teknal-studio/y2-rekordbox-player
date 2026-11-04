@@ -51,9 +51,18 @@ You need Docker. The build runs an x86_64 Linux container, which works under Ros
 
 1. Download two assets from the [Y2-Rockbox v0.2.5-beta release](https://github.com/SPYCEMAGIC/Y2-Rockbox/releases/tag/v0.2.5-beta) into `sources/`: `rom_y2.zip` and `Y2-Rockbox-V2.5-Source.zip`. The script checks their SHA-256.
 2. Run `./build/build_all.sh`. The first run builds the toolchain image, which takes a while.
-3. The ROM is `build/out/rom/rom_y2.zip`.
+   To use your own boot splash, pass a transparent PNG logo: `SPLASH_LOGO=path/to/logo.png ./build/build_all.sh`. It replaces the boot still (`logo.bin`) and the spinning boot animation.
+3. The ROM is `build/out/rom/rom_y2.zip`. The build checks it against the stock ROM with `build/verify_rom.py` before it finishes.
 
 The Rockbox app is re-signed with a key generated on your machine at `build/out/y2dj-debug.keystore`. Keep using the same key for later builds. Never commit it.
+
+## Tests
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+The tests need Python 3 with Pillow, and a C compiler for the playlist navigation test. Two groups skip themselves unless their inputs are there: the patch tests need the V2.5 source in `sources/v2.5` (the build unpacks it), and the ROM test needs Docker and a finished build. The tests use synthetic data only, never a real library or device dump.
 
 ## Install
 

@@ -5,8 +5,8 @@
 #   sources/rom_y2.zip                   the V2.5 ROM
 #   sources/Y2-Rockbox-V2.5-Source.zip   its GPL source
 # Output: build/out/rom/rom_y2.zip, flashable with the Innioasis Updater.
-# Optional: SPLASH_LOGO=path/to/logo.png replaces the boot animation with that
-# logo spinning on a record (needs Pillow on the host). Unset keeps the stock one.
+# Optional: SPLASH_LOGO=path/to/logo.png replaces the boot still (logo.bin) and
+# the boot animation with that logo (needs Pillow on the host). Unset keeps stock.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -37,11 +37,13 @@ echo "== native libraries"
 run "bash /bld/build.sh patched /bld/patches/y2dj-playlists-aiff.patch /bld/patches/y2dj-title-display.patch"
 echo "== java"
 run "bash /bld/build_java.sh java /bld/patches/y2dj-launch-guard.patch"
-rm -f build/out/patched/bootanimation.zip
+rm -f build/out/patched/bootanimation.zip build/out/patched/logo.bin
 if [ -n "${SPLASH_LOGO:-}" ]; then
-    echo "== boot animation from $SPLASH_LOGO"
-    python3 -I tools/make_bootanimation.py "$SPLASH_LOGO" build/out/splash --style record --pad-to 658280
-    cp build/out/splash/bootanimation.zip build/out/patched/bootanimation.zip
+    echo "== boot splash from $SPLASH_LOGO"
+    unzip -o -q sources/rom_y2.zip logo.bin -d build/out/splash-stock
+    python3 -I tools/make_splash.py "$SPLASH_LOGO" build/out/splash \
+        --stock-logo-bin build/out/splash-stock/logo.bin --pad-to 658280
+    cp build/out/splash/bootanimation.zip build/out/splash/logo.bin build/out/patched/
 fi
 echo "== app, vold and ROM"
 run '
@@ -57,4 +59,6 @@ python3 /bld/make_apk.py /tmp/x/Rockbox.apk java/classes.dex patched patched/Roc
 python3 /bld/make_rom.py /src/rom_y2.zip patched rom/rom_y2.zip
 chown -R "$HOST_UID:$HOST_GID" /out
 '
+echo "== verify"
+run 'python3 /bld/verify_rom.py /src/rom_y2.zip /out/rom/rom_y2.zip /out/patched'
 shasum -a 256 build/out/rom/rom_y2.zip

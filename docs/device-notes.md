@@ -32,7 +32,7 @@ Results from one Innioasis Y2 (stock firmware FM_3.2.4, MT6582, Android 4.4.2) w
 |---|---|---|
 | `y2dj-playlists-aiff.patch` | 455 of 696 AIFFs skipped: rekordbox/Core Audio writes a 4 KiB `FLLR` chunk and the codec only searched the first 1024 bytes | Search the first 8192 bytes |
 | same | Playlist catalog hid folders | Show directories when the M3U filter is on, sorted with playlists |
-| same | Back from a nested playlist went to the wrong level | Count directory level from `/` |
+| same | Back from a nested playlist went to the top-level Playlists folder | Reopen the folder that holds the playlist, and count levels from the Playlists folder, so Back goes up one level at a time |
 | `y2dj-launch-guard.patch` | After turning USB storage off, Rockbox sometimes stuck on "Restoring storage..." because a stale preference denied its own restart | Allow Rockbox's own restart when both saved routes are blank and the boot route property says Rockbox |
 | `y2dj-title-display.patch` | Playlist track lists showed file names | Default Track Display to "Title from ID3 tags" (falls back to the file name) |
 

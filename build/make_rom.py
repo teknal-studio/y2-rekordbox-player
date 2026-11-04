@@ -16,9 +16,13 @@ import zipfile
 rom, patched, out = sys.argv[1:4]
 FILES = {"/lib/librockbox.so": "librockbox.so", "/lib/libaiff.so": "libaiff.so",
          "/app/Rockbox.apk": "Rockbox.apk", "/bin/vold": "vold"}
-# Optional: a custom boot animation (tools/make_bootanimation.py --pad-to 658280).
+# Optional custom splash from tools/make_splash.py: the boot animation goes into
+# system.img, and logo.bin (the boot still) replaces the ROM zip's logo.bin.
 if os.path.exists(f"{patched}/bootanimation.zip"):
     FILES["/media/bootanimation.zip"] = "bootanimation.zip"
+ZIP_FILES = {}
+if os.path.exists(f"{patched}/logo.bin"):
+    ZIP_FILES["logo.bin"] = f"{patched}/logo.bin"
 BLOCK = 4096
 
 
@@ -90,6 +94,9 @@ with zipfile.ZipFile(rom) as src, zipfile.ZipFile(out, "w") as dst:
         new.external_attr = info.external_attr
         if info.filename == "system.img":
             with open("/tmp/rom/new.img", "rb") as f:
+                dst.writestr(new, f.read())
+        elif info.filename in ZIP_FILES:
+            with open(ZIP_FILES[info.filename], "rb") as f:
                 dst.writestr(new, f.read())
         else:
             dst.writestr(new, src.read(info.filename))
