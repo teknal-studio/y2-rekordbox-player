@@ -3,6 +3,7 @@
 Needs Docker, the y2-rockbox-build image, the stock ROM in sources/ and a
 build in build/out/ (run build/build_all.sh first); skipped otherwise.
 """
+import hashlib
 import os
 import shutil
 import subprocess
@@ -26,12 +27,14 @@ def have_image():
 @unittest.skipUnless(have_image(), f'needs Docker and the {IMAGE} image')
 class RomTest(unittest.TestCase):
     def test_verify_rom(self):
+        with open(os.path.join(ROOT, 'themes', 'MacClassic-Dark-Y2DJ.wps'), 'rb') as f:
+            version = '29-y2dj-' + hashlib.sha256(f.read()).hexdigest()[:8]
         r = subprocess.run(
             ['docker', 'run', '--rm', '--platform', 'linux/amd64',
              '-v', f'{ROOT}/build:/bld:ro', '-v', f'{ROOT}/build/out:/out:ro',
-             '-v', f'{ROOT}/sources:/src:ro', IMAGE,
+             '-v', f'{ROOT}/sources:/src:ro', '-v', f'{ROOT}/themes:/themes:ro', IMAGE,
              'python3', '/bld/verify_rom.py', '/src/rom_y2.zip', '/out/rom/rom_y2.zip',
-             '/out/patched'], capture_output=True, text=True, timeout=900)
+             '/out/patched', '/themes', version], capture_output=True, text=True, timeout=900)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn('0 failure(s)', r.stdout)
 

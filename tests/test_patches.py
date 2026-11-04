@@ -14,7 +14,8 @@ from helpers import ROOT
 SRC = os.path.join(ROOT, 'sources', 'v2.5', 'Y2-Rockbox-V2.5-Source',
                    '11_rockbox_android', 'rockbox-y1')
 PATCHES = os.path.join(ROOT, 'build', 'patches')
-ALL = ['y2dj-playlists-aiff.patch', 'y2dj-title-display.patch', 'y2dj-launch-guard.patch']
+ALL = ['y2dj-playlists-aiff.patch', 'y2dj-title-display.patch', 'y2dj-launch-guard.patch',
+       'y2dj-volume-keys.patch']
 
 
 @unittest.skipUnless(os.path.isdir(SRC), 'needs the V2.5 source in sources/v2.5')
@@ -53,6 +54,12 @@ class PatchesTest(unittest.TestCase):
             # Track display defaults to "title from tags" (choice 3).
             self.assertIn('playlist_viewer_track_display, LANG_TRACK_DISPLAY, 3,',
                           read('apps/settings_list.c'))
+            # Volume keys go through the event queue, after the long-press
+            # skip path so that setting, when on, still sees them first.
+            native = read('firmware/target/hosted/android/button-android.c')
+            handler = native[native.index('Java_org_rockbox_RockboxFramebuffer_buttonHandler('):]
+            self.assertLess(handler.index('volume_longpress_handle('),
+                            handler.index('button_queue_post(state ? vol : vol | BUTTON_REL, 0);'))
 
 
 if __name__ == '__main__':

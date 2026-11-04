@@ -20,6 +20,9 @@ FILES = {"/lib/librockbox.so": "librockbox.so", "/lib/libaiff.so": "libaiff.so",
 # system.img, and logo.bin (the boot still) replaces the ROM zip's logo.bin.
 if os.path.exists(f"{patched}/bootanimation.zip"):
     FILES["/media/bootanimation.zip"] = "bootanimation.zip"
+# Optional: Rockbox's resource archive with our default theme (patch_libmisc.py).
+if os.path.exists(f"{patched}/libmisc.so"):
+    FILES["/lib/libmisc.so"] = "libmisc.so"
 ZIP_FILES = {}
 if os.path.exists(f"{patched}/logo.bin"):
     ZIP_FILES["logo.bin"] = f"{patched}/logo.bin"
@@ -80,7 +83,8 @@ with open("/tmp/rom/sys.orig", "rb") as a, open("/tmp/rom/sys.raw", "rb") as b:
             outside += n not in touched
         n += 1
 print("blocks changed", changed, "outside the replaced files", outside)
-assert outside <= 1  # the inode table block when a file size changed
+# At most one inode table block per file whose size changed.
+assert outside <= sum(new != old for new, old in resized.values()), outside
 
 for name, local in FILES.items():
     run("debugfs", "-R", f"dump {name} /tmp/rom/check", "/tmp/rom/back.raw")

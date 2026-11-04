@@ -90,6 +90,18 @@ playlist catalog directory: /storage/sdcard1/Playlists
 sort playlists: oldest
 ```
 
+## Now Playing theme
+
+`themes/MacClassic-Dark-Y2DJ.wps` is the stock MacClassic-Dark theme with the volume shown as a vertical bar on the right edge, next to the volume buttons. The ROM ships it as the default MacClassic-Dark theme: the build puts it into Rockbox's resource archive (`/system/lib/libmisc.so`) and sets Rockbox's resource version from the theme's hash, so the Y2 unpacks its resources again on the first boot after a flash whenever the theme has changed. Settings are not in the archive, so they're kept.
+
+To try a theme change without flashing, with the Y2's internal storage mounted:
+
+```sh
+python3 -I tools/install_theme.py /Volumes/<Y2 internal storage>
+```
+
+It writes the theme over the default `MacClassic-Dark.wps` (and over the `MacClassic-Dark-Y2DJ.wps` copy that earlier versions made, so it can't go stale). On the Y2, open `y2dj-theme.cfg` from the internal storage in the file browser to select it.
+
 ## License
 
 GPL-3.0-or-later. See `LICENSE` and `NOTICE.md`. This repo contains no firmware images; you build the ROM from the official V2.5 release yourself.

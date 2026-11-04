@@ -11,6 +11,8 @@ It builds on, and its patches modify:
 | [y1-community/Innioasis-Updater](https://github.com/y1-community/Innioasis-Updater) | GPL-3.0 | Flashing tool used to install the ROM |
 | [mtkclient](https://github.com/bkerler/mtkclient) | GPL-3.0 | Backup and flashing over USB |
 
+`themes/MacClassic-Dark-Y2DJ.wps` is adapted from the MacClassic-Dark theme shipped with Y2-Rockbox, itself based on Billy Blair's MacClassic Rockbox theme. It is licensed CC-BY-SA 3.0, like the original, and keeps the original credits in its header. Our changes: the volume bar, and the title rows moved clear of the track counter.
+
 The `export.pdb` parser follows Deep Symmetry's published analysis of the rekordbox DeviceSQL format ([crate-digger](https://github.com/Deep-Symmetry/crate-digger)).
 
 ## Not included

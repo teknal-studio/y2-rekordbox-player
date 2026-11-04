@@ -1,0 +1,85 @@
+diff --color -ru a/android/src/org/rockbox/RockboxActivity.java b/android/src/org/rockbox/RockboxActivity.java
+--- a/android/src/org/rockbox/RockboxActivity.java	2026-11-03 21:35:49
++++ b/android/src/org/rockbox/RockboxActivity.java	2026-11-03 21:36:03
+@@ -28,6 +28,7 @@
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.ResultReceiver;
++import android.view.KeyEvent;
+ import android.graphics.Color;
+ import android.graphics.drawable.ColorDrawable;
+ import android.view.View;
+@@ -39,6 +40,20 @@
+ 
+ public class RockboxActivity extends Activity 
+ {
++    /* y2-rekordbox-player: log volume keys as the activity receives them,
++     * before the Rockbox view does, to show where a key stops. */
++    @Override
++    public boolean dispatchKeyEvent(KeyEvent event)
++    {
++        int code = event.getKeyCode();
++        if (code == KeyEvent.KEYCODE_VOLUME_UP
++                || code == KeyEvent.KEYCODE_VOLUME_DOWN)
++            Y2Marker.write(this, "RockboxVolume:activity action="
++                    + event.getAction() + " keyCode=" + code
++                    + " repeat=" + event.getRepeatCount());
++        return super.dispatchKeyEvent(event);
++    }
++
+     private static final long USB_RETURN_SETTLE_MS = 0L;
+     private static final int Y2_FULLSCREEN_UI_FLAGS =
+             View.SYSTEM_UI_FLAG_LOW_PROFILE
+diff --color -ru a/android/src/org/rockbox/RockboxFramebuffer.java b/android/src/org/rockbox/RockboxFramebuffer.java
+--- a/android/src/org/rockbox/RockboxFramebuffer.java	2026-11-03 21:35:49
++++ b/android/src/org/rockbox/RockboxFramebuffer.java	2026-11-03 21:36:03
+@@ -255,6 +255,12 @@
+ 
+     public boolean onKeyDown(int keyCode, KeyEvent event)
+     {
++        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP
++                || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
++            Y2Marker.write(markerContext,
++                    "RockboxVolume:view key-down keyCode=" + keyCode
++                    + " repeat=" + event.getRepeatCount());
++        }
+         if (keyCode == KeyEvent.KEYCODE_DPAD_UP
+                 || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+             Y2Marker.write(markerContext,
+@@ -293,6 +299,11 @@
+ 
+     public boolean onKeyUp(int keyCode, KeyEvent event)
+     {
++        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP
++                || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
++            Y2Marker.write(markerContext,
++                    "RockboxVolume:view key-up keyCode=" + keyCode);
++        }
+         if (keyCode == CENTER_KEYCODE) {
+             // Cancel pending timer
+             longPressHandler.removeCallbacks(centerLongPressRunnable);
+diff --color -ru a/firmware/target/hosted/android/button-android.c b/firmware/target/hosted/android/button-android.c
+--- a/firmware/target/hosted/android/button-android.c	2026-11-03 21:35:49
++++ b/firmware/target/hosted/android/button-android.c	2026-11-03 21:36:03
+@@ -109,6 +109,21 @@
+         }
+     }
+ 
++    /* Y2: with long-press skip off, post volume keys through the queue as a
++     * press and a release, like the D-pad below. The Y2 keypad reports
++     * quick down/up pairs, and a press that comes and goes between two
++     * button ticks never shows up on the polled last_btns path, so the
++     * keys did nothing. Repeats still come through buttonHandlerRepeat. */
++    if (keycode == KEYCODE_VOLUME_UP || keycode == KEYCODE_VOLUME_DOWN)
++    {
++        unsigned vol = keycode == KEYCODE_VOLUME_UP ? BUTTON_VOL_UP
++                                                    : BUTTON_VOL_DOWN;
++        wait_rockbox_ready();
++        reset_poweroff_timer();
++        button_queue_post(state ? vol : vol | BUTTON_REL, 0);
++        return true;
++    }
++
+     /* Trigger one deterministic vibration on key-down. The setting stores
+      * an index into RockboxFramebuffer's bounded duration table. */
+     if (state && (keycode == KEYCODE_DPAD_UP || keycode == KEYCODE_DPAD_DOWN))

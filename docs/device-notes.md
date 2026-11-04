@@ -35,6 +35,7 @@ Results from one Innioasis Y2 (stock firmware FM_3.2.4, MT6582, Android 4.4.2) w
 | same | Back from a nested playlist went to the top-level Playlists folder | Reopen the folder that holds the playlist, and count levels from the Playlists folder, so Back goes up one level at a time |
 | `y2dj-launch-guard.patch` | After turning USB storage off, Rockbox sometimes stuck on "Restoring storage..." because a stale preference denied its own restart | Allow Rockbox's own restart when both saved routes are blank and the boot route property says Rockbox |
 | `y2dj-title-display.patch` | Playlist track lists showed file names | Default Track Display to "Title from ID3 tags" (falls back to the file name) |
+| `y2dj-volume-keys.patch` | The volume buttons did nothing. The keypad reports each press as a 40–75 ms down/up pair (seen in `y2_p12_volume_hold_v5.log`), and the polled button path can miss it | Post volume presses through the button queue, like the wheel, and log `RockboxVolume:` markers for each volume key |
 
 Titles come from file tags, not from rekordbox, so titles edited only in rekordbox will differ.
 

@@ -3,8 +3,9 @@
 
 Runs inside the build image (needs simg2img, debugfs and e2fsck). build_all.sh
 runs it after every build.
-usage: verify_rom.py stock_rom.zip built_rom.zip patched_dir
+usage: verify_rom.py stock_rom.zip built_rom.zip patched_dir [themes_dir resource_version]
 """
+import io
 import os
 import struct
 import subprocess
@@ -19,6 +20,8 @@ import patch_vold  # noqa: E402
 SYSTEM_FILES = {"/lib/librockbox.so": "librockbox.so", "/lib/libaiff.so": "libaiff.so",
                 "/app/Rockbox.apk": "Rockbox.apk", "/bin/vold": "vold"}
 BOOTANIM = "/media/bootanimation.zip"
+LIBMISC = "/lib/libmisc.so"
+THEME_ENTRY = ".rockbox/wps/MacClassic-Dark.wps"
 LOGO_MAGIC = 0x58881688
 failures = []
 
@@ -50,7 +53,9 @@ def logo_images(data):
 
 def main():
     stock_zip, built_zip, patched = sys.argv[1:4]
+    themes, resource_version = (sys.argv[4:6] + [None, None])[:2]
     splash = os.path.exists(f"{patched}/bootanimation.zip")
+    theme = os.path.exists(f"{patched}/libmisc.so")
     stock, built = zipfile.ZipFile(stock_zip), zipfile.ZipFile(built_zip)
 
     names = [i.filename for i in stock.infolist()]
@@ -72,6 +77,8 @@ def main():
         files = dict(SYSTEM_FILES)
         if splash:
             files[BOOTANIM] = "bootanimation.zip"
+        if theme:
+            files[LIBMISC] = "libmisc.so"
         for name, local in files.items():
             with open(f"{patched}/{local}", "rb") as f:
                 want_bytes = f.read()
@@ -80,6 +87,9 @@ def main():
         stock_vold = dump(f"{tmp}/stock.raw", "/bin/vold", f"{tmp}/v")
         check(dump(raw, "/bin/vold", f"{tmp}/v2") == patch_vold.patch(stock_vold),
               "vold has exactly the LUN swap")
+
+        if theme:
+            check_theme(f"{tmp}/stock.raw", raw, tmp, themes, resource_version, patched)
 
         if splash:
             with zipfile.ZipFile(f"{patched}/bootanimation.zip") as z:
@@ -105,6 +115,23 @@ def main():
 
     print(f"{len(failures)} failure(s)")
     sys.exit(1 if failures else 0)
+
+
+def check_theme(stock_raw, raw, tmp, themes, resource_version, patched):
+    old = zipfile.ZipFile(io.BytesIO(dump(stock_raw, LIBMISC, f"{tmp}/m0")))
+    new = zipfile.ZipFile(io.BytesIO(dump(raw, LIBMISC, f"{tmp}/m1")))
+    check(new.testzip() is None, "resource archive is a valid zip")
+    check(old.namelist() == new.namelist(), "resource archive has the same files")
+    changed = [n for n in old.namelist() if old.read(n) != new.read(n)]
+    check(changed == [THEME_ENTRY], f"resource archive changes only the theme (got {changed})")
+    if themes:
+        with open(os.path.join(themes, "MacClassic-Dark-Y2DJ.wps"), "rb") as f:
+            check(new.read(THEME_ENTRY) == f.read(), "default theme is themes/MacClassic-Dark-Y2DJ.wps")
+    if resource_version:
+        with zipfile.ZipFile(f"{patched}/Rockbox.apk") as apk:
+            dex = apk.read("classes.dex")
+        check(resource_version.encode() in dex,
+              f"app re-unpacks resources: version {resource_version}")
 
 
 def stat_size(img, name):
