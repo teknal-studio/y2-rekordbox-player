@@ -1,0 +1,10 @@
+# Inputs you download yourself, and everything built from them
+sources/
+build/out/
+# Never commit anything read from a device: backups, card snapshots, chip IDs
+backup/
+card-snapshot/
+hwparam.json
+*.keystore
+.DS_Store
+tools/.venv/

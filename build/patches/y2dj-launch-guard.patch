@@ -1,0 +1,29 @@
+diff --color -ru a/android/src/org/rockbox/Y2BootState.java b/android/src/org/rockbox/Y2BootState.java
+--- a/android/src/org/rockbox/Y2BootState.java	2026-10-31 13:17:40
++++ b/android/src/org/rockbox/Y2BootState.java	2026-10-31 13:18:23
+@@ -164,6 +164,17 @@
+                 && BOOT_ROCKBOX.equals(effectiveRoute)
+                 && allowed
+                 && now >= lockoutUntil);
++        /* Android 4.4 can leave this process with blank preferences after USB
++         * storage. Stock always writes its route, so blank is never a choice;
++         * the boot property keeps the real route for this boot. */
++        boolean staleRouteRecovered = !result
++                && (reason.startsWith("RockboxActivity")
++                || reason.startsWith("RockboxService"))
++                && SELECT_UNSET.equals(selected)
++                && SELECT_UNSET.equals(route)
++                && BOOT_ROCKBOX.equals(Y2FirmwareRouteProperty.readEffectiveRoute())
++                && now >= lockoutUntil;
++        result = result || staleRouteRecovered;
+         Y2Marker.write(context, "RockboxLaunchGuard: "
+                 + (result ? "allow" : "deny")
+                 + " reason=" + reason
+@@ -173,6 +184,7 @@
+                 + " effectiveRoute=" + effectiveRoute
+                 + " rockboxLaunchAllowed=" + allowed
+                 + " binderAuthorized=" + binderAuthorized
++                + " staleRouteRecovered=" + staleRouteRecovered
+                 + " stockLockoutUntilMs=" + lockoutUntil
+                 + " nowMs=" + now
+                 + " launchReason=" + p.getString(KEY_ROCKBOX_LAUNCH_REASON, ""));
